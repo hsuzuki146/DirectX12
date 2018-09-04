@@ -40,6 +40,9 @@
     <ClCompile Include="..\src\game\actor\actor.cpp">
       <Filter>game\actor</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\game\actor\component\move_component.cpp">
+      <Filter>game\actor\component</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\application.h">
@@ -76,6 +79,9 @@
       <Filter>game\actor\component</Filter>
     </ClInclude>
     <ClInclude Include="..\src\game\actor\component\component_types.h">
+      <Filter>game\actor\component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\game\actor\component\move_component.h">
       <Filter>game\actor\component</Filter>
     </ClInclude>
   </ItemGroup>

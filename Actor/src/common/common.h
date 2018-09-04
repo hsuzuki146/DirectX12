@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <tchar.h>
+#include <DirectXMath.h>
 
 #if defined (_DEBUG)
 #include <assert.h>

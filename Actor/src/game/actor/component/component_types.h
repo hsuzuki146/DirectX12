@@ -1,5 +1,5 @@
 #pragma once
-#include "../../common/common.h"
+#include "../../../common/common.h"
 
 // コンポーネントのID.
 enum ComponentID : UInt16

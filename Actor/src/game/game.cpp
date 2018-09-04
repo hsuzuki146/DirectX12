@@ -2,6 +2,9 @@
 #include "../common/timer.h"
 #include "../common/d3dx12manager.h"
 
+#include "actor/actor.h"
+#include "actor/component/move_component.h"
+
 Game::Game()
 {
 }

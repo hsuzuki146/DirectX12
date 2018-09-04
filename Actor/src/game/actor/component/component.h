@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../common/common.h"
+#include "../../../common/common.h"
 #include "component_types.h"
 
 class Actor;
