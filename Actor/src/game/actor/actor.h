@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../../common/common.h"
+#include "../../common/job.h"
 #include <map>
 
 class Component;
@@ -10,7 +11,7 @@ class Actor
 public:
 	Actor() {}
 	virtual ~Actor() {}
-	virtual bool Create() { return true; }
+	virtual bool Create();
 	virtual void Destroy() {}
 	virtual void Update(Float32 deltaTime) {}
 
@@ -35,6 +36,7 @@ public:
 
 private:
 	UInt64				id_;											// 識別ID.
+	Job					job_;
 	std::map<UInt64, Component*> components_;
 	DirectX::XMVECTOR	position_ = DirectX::XMVectorZero();			// 座標.
 	DirectX::XMVECTOR	rotation_ = DirectX::XMQuaternionIdentity();	// 回転.

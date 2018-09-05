@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7EFF5C8A-7719-4668-B472-10E1D6A1E232}</ProjectGuid>
     <RootNamespace>Actor</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -40,7 +40,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -120,10 +120,13 @@
   <ItemGroup>
     <ClCompile Include="..\src\application.cpp" />
     <ClCompile Include="..\src\common\d3dx12manager.cpp" />
+    <ClCompile Include="..\src\common\job.cpp" />
+    <ClCompile Include="..\src\common\job_container.cpp" />
     <ClCompile Include="..\src\common\timer.cpp" />
     <ClCompile Include="..\src\common\window.cpp" />
     <ClCompile Include="..\src\game\actor\actor.cpp" />
     <ClCompile Include="..\src\game\actor\component\move_component.cpp" />
+    <ClCompile Include="..\src\game\actor\job\job_scheduler.cpp" />
     <ClCompile Include="..\src\game\game.cpp" />
     <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
@@ -131,6 +134,8 @@
     <ClInclude Include="..\src\application.h" />
     <ClInclude Include="..\src\common\common.h" />
     <ClInclude Include="..\src\common\d3dx12manager.h" />
+    <ClInclude Include="..\src\common\job.h" />
+    <ClInclude Include="..\src\common\job_container.h" />
     <ClInclude Include="..\src\common\setup_param.h" />
     <ClInclude Include="..\src\common\singleton.h" />
     <ClInclude Include="..\src\common\timer.h" />
@@ -140,6 +145,7 @@
     <ClInclude Include="..\src\game\actor\component\component.h" />
     <ClInclude Include="..\src\game\actor\component\component_types.h" />
     <ClInclude Include="..\src\game\actor\component\move_component.h" />
+    <ClInclude Include="..\src\game\actor\job\job_scheduler.h" />
     <ClInclude Include="..\src\game\game.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

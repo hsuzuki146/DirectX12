@@ -4,6 +4,13 @@
 
 #include "actor/actor.h"
 #include "actor/component/move_component.h"
+#include "actor/job/job_scheduler.h"
+
+namespace
+{
+	const Int32 ACTOR_NUM = 1000000;
+	Actor actors[ACTOR_NUM];
+}
 
 Game::Game()
 {
@@ -72,11 +79,19 @@ void Game::updateInitialize(Float32 deltaTime)
 		state_ = State::None;
 		return;
 	}
+
+	for (auto& actor : actors)
+	{
+		// アクターの生成.
+		actor.Create();
+		actor.AddComponent<MoveComponent>();
+	}
+
 	state_ = State::Exec;
 }
 void Game::updateExec(Float32 deltaTime)
 {
-
+	JobScheduler::GetInstance().Execute(deltaTime);
 }
 void Game::updateRelease(Float32 deltaTime)
 {

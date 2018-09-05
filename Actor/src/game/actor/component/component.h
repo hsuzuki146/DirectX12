@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../../common/common.h"
+#include "../../../common/job.h"
 #include "component_types.h"
 
 class Actor;
@@ -16,5 +17,6 @@ protected:
 	Component(Actor* owner) : owner_(owner) { }
 
 protected:
-	Actor* owner_;	// コンポーネントを所持しているアクター.
+	Actor*	owner_;	// コンポーネントを所持しているアクター.
+	Job		job_;	// ジョブ.
 };

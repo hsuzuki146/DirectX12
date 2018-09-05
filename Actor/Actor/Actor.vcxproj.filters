@@ -17,6 +17,9 @@
     <Filter Include="game\actor\component">
       <UniqueIdentifier>{f3852bdb-7ec9-42d0-9e83-e3af7eea6f57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="game\actor\job">
+      <UniqueIdentifier>{30594e88-6218-4b7b-89c8-1f4d934d3ac2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\application.cpp">
@@ -42,6 +45,15 @@
     </ClCompile>
     <ClCompile Include="..\src\game\actor\component\move_component.cpp">
       <Filter>game\actor\component</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\common\job.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\common\job_container.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\game\actor\job\job_scheduler.cpp">
+      <Filter>game\actor\job</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +95,15 @@
     </ClInclude>
     <ClInclude Include="..\src\game\actor\component\move_component.h">
       <Filter>game\actor\component</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\job.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common\job_container.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\game\actor\job\job_scheduler.h">
+      <Filter>game\actor\job</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
