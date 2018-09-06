@@ -15,3 +15,8 @@
 #include "singleton.h"
 #include "setup_param.h"
 #include "window.h"
+
+#define NEW(p) new p;
+#define NEW_ARRAY(p, size) new p[size];
+#define SAFE_DELETE(p) if(p) { delete p; }
+#define SAFE_DELETE_ARRAY(p) if(p) { delete[] p; }

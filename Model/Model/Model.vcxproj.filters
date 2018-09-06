@@ -90,6 +90,9 @@
     <ClInclude Include="src\game\model\model.h">
       <Filter>ソース ファイル\game\model</Filter>
     </ClInclude>
+    <ClInclude Include="src\game\model\def_gltf.h">
+      <Filter>ソース ファイル\game\model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\shader\shader.hlsl">

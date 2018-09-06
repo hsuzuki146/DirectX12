@@ -137,6 +137,7 @@
     <ClInclude Include="src\common\window.h" />
     <ClInclude Include="src\game\game.h" />
     <ClInclude Include="src\game\model\model.h" />
+    <ClInclude Include="src\game\model\def_gltf.h" />
     <ClInclude Include="src\game\primitive\triangle.h" />
     <ClInclude Include="src\lib\json11.hpp" />
   </ItemGroup>
