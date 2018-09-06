@@ -24,6 +24,9 @@ public:
 	void Destroy();
 	void Render();
 
+	ComPtr<ID3D12Device> GetDevice() { return device_; }
+	ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return command_list_; }
+
 private:
 	bool createFactory();
 	bool createDevice();
@@ -89,3 +92,5 @@ private:
 };
 
 #define D3D_MGR() (D3DX12Manager::GetInstance())
+#define D3D_DEVICE() (D3DX12Manager::GetInstance().GetDevice().Get())
+#define D3D_COMMAND_LIST() (D3DX12Manager::GetInstance().GetCommandList().Get())

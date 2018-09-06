@@ -24,7 +24,8 @@ bool D3DX12Manager::Create()
 	setupViewport();
 	setupScissor();
 
-	triangle_.Initialize(device_.Get());
+	// 三角形の初期化.
+	triangle_.Initialize();
 
 	return true;
 }
@@ -56,8 +57,8 @@ void D3DX12Manager::Render()
 		// レンダーターゲットの設定.
 		command_list_->OMSetRenderTargets(1, &rtv_handle_[buffer_index_], TRUE, &dsv_handle_);
 
-		// 板ポリの描画.
-		triangle_.Draw(command_list_.Get());
+		// 三角形の描画.
+		triangle_.Draw();
 
 		// リソースの状態をレンダーターゲット用からプレゼント用に変更.
 		setResourceBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);

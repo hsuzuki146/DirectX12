@@ -11,8 +11,8 @@ class Triangle
 public:
 	Triangle() {}
 	~Triangle() {}
-	bool Initialize(ID3D12Device* device);
-	void Draw(ID3D12GraphicsCommandList* ommand_list);
+	bool Initialize();
+	void Draw();
 
 private:
 	ComPtr<ID3D12Resource>	vertex_buffer_;
