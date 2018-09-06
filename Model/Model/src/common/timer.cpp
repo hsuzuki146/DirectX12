@@ -16,7 +16,7 @@ void Timer::Initialize()
 
 void Timer::Update()
 {
-	const DWORD time = timeGetTime();
-	delta_time_ = static_cast<float>(time - current_time_) / 1000.0f;
+	const UInt64 time = timeGetTime();
+	delta_time_ = static_cast<Float32>(time - current_time_) / 1000.0f;
 	current_time_ = time;
 }

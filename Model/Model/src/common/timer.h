@@ -8,8 +8,8 @@ public:
 	~Timer();
 	void Initialize();
 	void Update();
-	float GetDeltaTime() const { return delta_time_; }
+	Float32 GetDeltaTime() const { return delta_time_; }
 private:
-	DWORD current_time_ = { 0 };
-	float delta_time_ = 0.0f;
+	UInt64 current_time_ = { 0 };
+	Float32 delta_time_ = 0.0f;
 };

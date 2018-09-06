@@ -1,7 +1,4 @@
 #include "window.h"
-//#include "common/SetupParam.h"
-//#include "game/game.h"
-//#pragma comment( lib, "winmm.lib")
 
 int Window::Create()
 {
@@ -45,8 +42,8 @@ int Window::Create()
 
 	{
 		// クライアント領域の設定.
-		int screen_width = GetSystemMetrics(SM_CXSCREEN);
-		int screen_height = GetSystemMetrics(SM_CYSCREEN);
+		const Int32 screen_width = GetSystemMetrics(SM_CXSCREEN);
+		const Int32 screen_height = GetSystemMetrics(SM_CYSCREEN);
 		RECT rect{};
 		GetClientRect(hWnd_, &rect);
 		
@@ -74,33 +71,6 @@ void Window::Destroy()
 	UnregisterClass(param.windowName_, NULL);
 	hWnd_ = NULL;
 }
-
-#if 0
-void Window::Run()
-{
-	Game game;
-	DWORD time = timeGetTime();
-
-	while (TRUE)
-	{
-		MSG msg{};
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			if(msg.message == WM_QUIT)
-			{
-				break;
-			}
-		}
-		time = timeGetTime() - time;
-		const float deltaTime = static_cast<float>(time) / 1000.0f;
-
-		game.Update( deltaTime );
-		game.Render();
-	}
-}
-#endif
 
 HWND Window::GetWnd() const 
 { 

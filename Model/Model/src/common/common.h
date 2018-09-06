@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <tchar.h>
+#include <DirectXMath.h>
 
 #if defined (_DEBUG)
 #include <assert.h>
@@ -9,6 +10,7 @@
 #define ASSERT(flag) 
 #endif	// #if defined (_DEBUG)
 
+#include "types.h"
 #include "singleton.h"
 #include "setup_param.h"
 #include "window.h"
