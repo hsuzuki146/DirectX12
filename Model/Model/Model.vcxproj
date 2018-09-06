@@ -121,7 +121,9 @@
     <ClCompile Include="src\common\timer.cpp" />
     <ClCompile Include="src\common\window.cpp" />
     <ClCompile Include="src\game\game.cpp" />
+    <ClCompile Include="src\game\model\model.cpp" />
     <ClCompile Include="src\game\primitive\triangle.cpp" />
+    <ClCompile Include="src\lib\json11.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -131,9 +133,12 @@
     <ClInclude Include="src\common\setup_param.h" />
     <ClInclude Include="src\common\singleton.h" />
     <ClInclude Include="src\common\timer.h" />
+    <ClInclude Include="src\common\types.h" />
     <ClInclude Include="src\common\window.h" />
     <ClInclude Include="src\game\game.h" />
+    <ClInclude Include="src\game\model\model.h" />
     <ClInclude Include="src\game\primitive\triangle.h" />
+    <ClInclude Include="src\lib\json11.hpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="src\shader\shader.hlsl">

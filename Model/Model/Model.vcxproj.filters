@@ -17,6 +17,12 @@
     <Filter Include="ソース ファイル\game\primitive">
       <UniqueIdentifier>{36557fc4-cb85-4e52-85b6-b6d0074ab4af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\lib">
+      <UniqueIdentifier>{0bb8edcf-2814-4f53-b46b-a49fc6f7a0ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\game\model">
+      <UniqueIdentifier>{97a3e478-674d-4c92-bcb9-54e9587d8081}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -39,6 +45,12 @@
     </ClCompile>
     <ClCompile Include="src\game\primitive\triangle.cpp">
       <Filter>ソース ファイル\game\primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib\json11.cpp">
+      <Filter>ソース ファイル\lib</Filter>
+    </ClCompile>
+    <ClCompile Include="src\game\model\model.cpp">
+      <Filter>ソース ファイル\game\model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -68,6 +80,15 @@
     </ClInclude>
     <ClInclude Include="src\game\primitive\triangle.h">
       <Filter>ソース ファイル\game\primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\types.h">
+      <Filter>ソース ファイル\common</Filter>
+    </ClInclude>
+    <ClInclude Include="src\lib\json11.hpp">
+      <Filter>ソース ファイル\lib</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\model\model.h">
+      <Filter>ソース ファイル\game\model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
