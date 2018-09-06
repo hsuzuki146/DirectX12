@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <DirectXMath.h>
+#include <string>
 
 #if defined (_DEBUG)
 #include <assert.h>
