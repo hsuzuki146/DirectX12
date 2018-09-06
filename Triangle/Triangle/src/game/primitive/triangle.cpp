@@ -10,6 +10,14 @@ struct Vertex3D
 	XMFLOAT4 Color;	//’¸“_ƒJƒ‰[
 };
 
+Triangle::Triangle()
+{
+}
+
+Triangle::~Triangle()
+{
+}
+
 bool Triangle::Initialize()
 {
 	// •¨—ƒƒ‚ƒŠİ’è.

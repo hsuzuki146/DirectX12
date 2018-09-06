@@ -9,8 +9,8 @@ using namespace Microsoft::WRL;
 class Triangle
 {
 public:
-	Triangle() {}
-	~Triangle() {}
+	Triangle();
+	~Triangle();
 	bool Initialize();
 	void Draw();
 
