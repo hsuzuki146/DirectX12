@@ -65,28 +65,45 @@ bool Triangle::Initialize()
 	}
 
 	// 頂点データの書き込み.
-	Vertex3D* buffer = {};
-	hr = vertex_buffer_->Map(0, nullptr, (void**)&buffer);
-	if (FAILED(hr))
 	{
-		ASSERT(false);
-		return false;
+		Vertex3D* buffer = {};
+		hr = vertex_buffer_->Map(0, nullptr, (void**)&buffer);
+		if (FAILED(hr))
+		{
+			ASSERT(false);
+			return false;
+		}
+		buffer[0].Position = { 0.0f,  1.0f, 0.0f };
+		buffer[1].Position = { 1.0f, -1.0f, 0.0f };
+		buffer[2].Position = { -1.0f, -1.0f, 0.0f };
+		buffer[0].Normal = { 0.0f, 0.0f, -1.0f };
+		buffer[1].Normal = { 0.0f, 0.0f, -1.0f };
+		buffer[2].Normal = { 0.0f, 0.0f, -1.0f };
+		buffer[0].Color = { 1.0f, 0.0f, 0.0f, 1.0f };
+		buffer[1].Color = { 0.0f, 1.0f, 0.0f, 1.0f };
+		buffer[2].Color = { 0.0f, 0.0f, 1.0f, 1.0f };
+		vertex_buffer_->Unmap(0, nullptr);
+		buffer = nullptr;
 	}
-	buffer[0].Position = {  0.0f,  1.0f, 0.0f };
-	buffer[1].Position = {  1.0f, -1.0f, 0.0f };
-	buffer[2].Position = { -1.0f, -1.0f, 0.0f };
-	buffer[0].Normal = { 0.0f, 0.0f, -1.0f };
-	buffer[1].Normal = { 0.0f, 0.0f, -1.0f };
-	buffer[2].Normal = { 0.0f, 0.0f, -1.0f };
-	buffer[0].Color = { 1.0f, 0.0f, 0.0f, 1.0f };
-	buffer[1].Color = { 0.0f, 1.0f, 0.0f, 1.0f };
-	buffer[2].Color = { 0.0f, 0.0f, 1.0f, 1.0f };
-	vertex_buffer_->Unmap(0, nullptr);
+
 
 	// インデックスデータの書き込み.
+	{
+		UInt16* buffer = {};
+		UInt16 index[]{ 0, 1, 2 };
+		hr = index_buffer_->Map(0, nullptr, (void**)&buffer);
+		if (FAILED(hr))
+		{
+			ASSERT(false);
+			return true;
+		}
+		buffer[0] = index[0];
+		buffer[1] = index[1];
+		buffer[2] = index[2];
 
-	
-	buffer = nullptr;
+		index_buffer_->Unmap(0, nullptr);
+		buffer = NULL;
+	}
 
 
 	return true;
@@ -123,12 +140,18 @@ void Triangle::Draw()
 	vertex_view.StrideInBytes		= sizeof(Vertex3D);
 	vertex_view.SizeInBytes			= sizeof(Vertex3D) * 3;
 
+	D3D12_INDEX_BUFFER_VIEW index_view = {};
+	index_view.BufferLocation		= index_buffer_->GetGPUVirtualAddress();
+	index_view.SizeInBytes			= sizeof(UInt16) * 3;
+	index_view.Format				= DXGI_FORMAT_R16_UINT;
+
 	// 定数バッファをシェーダのレジスタにセット.
 	D3D_COMMAND_LIST()->SetGraphicsRootConstantBufferView( 0, constant_buffer_->GetGPUVirtualAddress());
 
 	// インデックスを使用しないトライアングルストリップで描画.
 	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	D3D_COMMAND_LIST()->IASetVertexBuffers(0, 1, &vertex_view);
+	D3D_COMMAND_LIST()->IASetIndexBuffer(&index_view);
 
 	// 描画.
 	D3D_COMMAND_LIST()->DrawInstanced(3, 1, 0, 0);
