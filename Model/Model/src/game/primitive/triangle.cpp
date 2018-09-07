@@ -48,6 +48,14 @@ bool Triangle::Initialize()
 		return false;
 	}
 
+	// インデックスバッファの作成.
+	hr = D3D_DEVICE()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&index_buffer_));
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return false;
+	}
+
 	// 定数バッファの作成.
 	hr = D3D_DEVICE()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&constant_buffer_));
 	if (FAILED(hr))
@@ -64,7 +72,6 @@ bool Triangle::Initialize()
 		ASSERT(false);
 		return false;
 	}
-
 	buffer[0].Position = {  0.0f,  1.0f, 0.0f };
 	buffer[1].Position = {  1.0f, -1.0f, 0.0f };
 	buffer[2].Position = { -1.0f, -1.0f, 0.0f };
@@ -74,8 +81,11 @@ bool Triangle::Initialize()
 	buffer[0].Color = { 1.0f, 0.0f, 0.0f, 1.0f };
 	buffer[1].Color = { 0.0f, 1.0f, 0.0f, 1.0f };
 	buffer[2].Color = { 0.0f, 0.0f, 1.0f, 1.0f };
-
 	vertex_buffer_->Unmap(0, nullptr);
+
+	// インデックスデータの書き込み.
+
+	
 	buffer = nullptr;
 
 

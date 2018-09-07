@@ -13,14 +13,20 @@ bool D3DX12Manager::Create()
 {
 	if(!createFactory()) { return false; }
 	if(!createDevice()) { return false; }
-
 	if(!createAllocator()) { return false; }
 	if(!createCommandQueue()) { return false; }
 	if(!createCommandList()) { return false; }
-
 	if(!createSwapChain()) { return false; }
 	if(!createRenderTarget()) { return false; }
 	if(!createDepthStencilBuffer()) { return false; }
+	if(!createRootSignature()) { return false; }
+	if(!createPipelineStateObject()) { return false; }
+
+	setupViewport();
+	setupScissor();
+
+	// 三角形の初期化.
+	triangle_.Initialize();
 
 	return true;
 }
@@ -41,8 +47,19 @@ void D3DX12Manager::Render()
 		command_list_->ClearDepthStencilView(dsv_handle_, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 		command_list_->ClearRenderTargetView(rtv_handle_[buffer_index_], clearColor, 0, nullptr);
 
+		// ルートシグネチャとPSOの設定.
+		command_list_->SetGraphicsRootSignature(root_signature_.Get());
+		command_list_->SetPipelineState(pipeline_state_.Get());
+
+		// ビューポートとシザー矩形の設定.
+		command_list_->RSSetViewports(1, &viewport_);
+		command_list_->RSSetScissorRects(1, &scissor_rect_);
+
 		// レンダーターゲットの設定.
 		command_list_->OMSetRenderTargets(1, &rtv_handle_[buffer_index_], TRUE, &dsv_handle_);
+
+		// 三角形の描画.
+		triangle_.Draw();
 
 		// リソースの状態をレンダーターゲット用からプレゼンyと用に変更.
 		setResourceBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -332,6 +349,187 @@ bool D3DX12Manager::createDepthStencilBuffer()
 	device_->CreateDepthStencilView(depth_buffer_.Get(), &dsv_desc, dsv_handle_);
 
 	return true;
+}
+
+bool D3DX12Manager::createRootSignature()
+{
+	// 定数バッファとシェーダーの関連付け.
+
+	D3D12_ROOT_PARAMETER		root_parameters[1] = {};	// パラメータ.
+	D3D12_ROOT_SIGNATURE_DESC	root_signature_desc = {};	// 用途.
+	ComPtr<ID3DBlob>			blob = {};					// バイナリデータ.
+
+	root_parameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// 定数バッファ.
+	root_parameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;		// どこでもアクセス可能.
+	root_parameters[0].Descriptor.ShaderRegister = 0;						// シェーダレジスタ0.
+	root_parameters[0].Descriptor.RegisterSpace = 0;						// b.
+
+	root_signature_desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;	// 頂点バッファに関連付ける.
+	root_signature_desc.NumParameters = _countof(root_parameters);								// パラメータ数.
+	root_signature_desc.pParameters = root_parameters;											// パラメータ.
+	root_signature_desc.NumStaticSamplers = 0;													// サンプリング数.
+	root_signature_desc.pStaticSamplers = nullptr;												// サンプリングパラメータ.
+
+																								// RootSignatureを作成するのに必要なバッファを確保し、Tableの情報をシリアライズする.
+	HRESULT hr = D3D12SerializeRootSignature(&root_signature_desc, D3D_ROOT_SIGNATURE_VERSION_1, &blob, nullptr);
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return false;
+	}
+	// ルートシグネチャの生成.
+	hr = device_->CreateRootSignature(0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&root_signature_));
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	return true;
+}
+
+bool D3DX12Manager::createPipelineStateObject()
+{
+	ASSERT(root_signature_);
+
+	// シェーダと描画ステート周りの設定.
+	HRESULT hr = S_OK;
+
+	// シェーダの最適化設定.
+#if defined(_DEBUG)
+	UINT32 compile_flag = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+	UINT32 compile_flag = 0;
+#endif
+
+	// 頂点シェーダのコンパイル.
+	ComPtr<ID3DBlob> vertex_shader = {};
+	hr = D3DCompileFromFile(L"src/shader/shader.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compile_flag, 0, vertex_shader.GetAddressOf(), nullptr);
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	// ピクセルシェーダのコンパイル.
+	ComPtr<ID3DBlob> pixel_shader = {};
+	hr = D3DCompileFromFile(L"src/shader/shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compile_flag, 0, pixel_shader.GetAddressOf(), nullptr);
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	// 頂点レイアウト.
+	D3D12_INPUT_ELEMENT_DESC InputElementDesc[] = {
+		{ "POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 12,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	0, 24,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	// グラフィックパイプライン.
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeline_state_desc = {};
+
+	// シェーダーの設定.
+	pipeline_state_desc.VS.pShaderBytecode = vertex_shader->GetBufferPointer();
+	pipeline_state_desc.VS.BytecodeLength = vertex_shader->GetBufferSize();
+	pipeline_state_desc.PS.pShaderBytecode = pixel_shader->GetBufferPointer();
+	pipeline_state_desc.PS.BytecodeLength = pixel_shader->GetBufferSize();
+
+	// インプットレイアウトの設定.
+	pipeline_state_desc.InputLayout.pInputElementDescs = InputElementDesc;
+	pipeline_state_desc.InputLayout.NumElements = _countof(InputElementDesc);
+
+	// サンプル系の設定.
+	pipeline_state_desc.SampleDesc.Count = 1;
+	pipeline_state_desc.SampleDesc.Quality = 0;
+	pipeline_state_desc.SampleMask = UINT_MAX;
+
+	// レンダーターゲットの設定.
+	pipeline_state_desc.NumRenderTargets = 1;
+	pipeline_state_desc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+	// 描画タイプを三角形に設定.
+	pipeline_state_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	// ルートシグネチャの指定.
+	pipeline_state_desc.pRootSignature = root_signature_.Get();
+
+	// ラスタライザーステートの設定(三角形を実際に描画する方法).
+	pipeline_state_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	pipeline_state_desc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	pipeline_state_desc.RasterizerState.FrontCounterClockwise = FALSE;	// 右回りで前向き.
+	pipeline_state_desc.RasterizerState.DepthBias = 0;
+	pipeline_state_desc.RasterizerState.DepthBiasClamp = 0;
+	pipeline_state_desc.RasterizerState.SlopeScaledDepthBias = 0;
+	pipeline_state_desc.RasterizerState.DepthClipEnable = TRUE;
+	pipeline_state_desc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;	// 少しでもピクセルに掛かったらラスタライズする.
+	pipeline_state_desc.RasterizerState.AntialiasedLineEnable = FALSE;
+	pipeline_state_desc.RasterizerState.MultisampleEnable = FALSE;
+
+	// ブレンドステートの設定.
+	for (int i = 0; i < _countof(pipeline_state_desc.BlendState.RenderTarget); ++i)
+	{
+		pipeline_state_desc.BlendState.RenderTarget[i].BlendEnable = FALSE;
+		pipeline_state_desc.BlendState.RenderTarget[i].SrcBlend = D3D12_BLEND_ONE;
+		pipeline_state_desc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND_ZERO;
+		pipeline_state_desc.BlendState.RenderTarget[i].BlendOp = D3D12_BLEND_OP_ADD;
+		pipeline_state_desc.BlendState.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND_ONE;
+		pipeline_state_desc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND_ZERO;
+		pipeline_state_desc.BlendState.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		pipeline_state_desc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		pipeline_state_desc.BlendState.RenderTarget[i].LogicOpEnable = FALSE;
+		pipeline_state_desc.BlendState.RenderTarget[i].LogicOp = D3D12_LOGIC_OP_CLEAR;
+	}
+	pipeline_state_desc.BlendState.AlphaToCoverageEnable = FALSE;	// レンダーターゲットを設定するときに、アルファトゥカバレッジをMSテクニックとして使用するか.
+	pipeline_state_desc.BlendState.IndependentBlendEnable = FALSE;	// RenderTarget[0]のみをブレンディングする.
+
+																	// デプスステンシルステートの設定.
+	pipeline_state_desc.DepthStencilState.DepthEnable = TRUE;	// 深度テストあり.
+	pipeline_state_desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	pipeline_state_desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	pipeline_state_desc.DepthStencilState.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+	pipeline_state_desc.DepthStencilState.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+
+	pipeline_state_desc.DepthStencilState.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	pipeline_state_desc.DepthStencilState.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	pipeline_state_desc.DepthStencilState.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	pipeline_state_desc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+
+	pipeline_state_desc.DepthStencilState.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	pipeline_state_desc.DepthStencilState.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	pipeline_state_desc.DepthStencilState.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	pipeline_state_desc.DepthStencilState.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+
+	pipeline_state_desc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+
+	// グラフィックスパイプラインの設定.
+	hr = device_->CreateGraphicsPipelineState(&pipeline_state_desc, IID_PPV_ARGS(&pipeline_state_));
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return false;
+	}
+
+	return true;
+}
+
+void D3DX12Manager::setupViewport()
+{
+	viewport_.TopLeftX = 0.0f;
+	viewport_.TopLeftY = 0.0f;
+	viewport_.Width = static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cx);
+	viewport_.Height = static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cy);
+	viewport_.MinDepth = 0.0f;
+	viewport_.MaxDepth = 1.0f;
+}
+
+void D3DX12Manager::setupScissor()
+{
+	scissor_rect_.top = 0;
+	scissor_rect_.left = 0;
+	scissor_rect_.right = SetupParam::GetInstance().GetParam().windowSize_.cx;
+	scissor_rect_.bottom = SetupParam::GetInstance().GetParam().windowSize_.cy;
 }
 
 // リソースバリア.

@@ -13,7 +13,6 @@
 #define ASSERT(flag) 
 #endif	// #if defined (_DEBUG)
 
-#include "debug.h"
 #include "types.h"
 #include "singleton.h"
 #include "setup_param.h"

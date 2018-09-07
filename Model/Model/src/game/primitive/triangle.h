@@ -16,5 +16,6 @@ public:
 
 private:
 	ComPtr<ID3D12Resource>	vertex_buffer_;
+	ComPtr<ID3D12Resource>	index_buffer_;
 	ComPtr<ID3D12Resource>	constant_buffer_;
 };
