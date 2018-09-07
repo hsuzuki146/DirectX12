@@ -135,6 +135,9 @@ void Triangle::Draw()
 	constant_buffer_->Unmap(0, nullptr);
 	buffer = nullptr;
 
+	// 定数バッファをシェーダのレジスタにセット.
+	D3D_COMMAND_LIST()->SetGraphicsRootConstantBufferView(0, constant_buffer_->GetGPUVirtualAddress());
+
 	D3D12_VERTEX_BUFFER_VIEW vertex_view = {};
 	vertex_view.BufferLocation		= vertex_buffer_->GetGPUVirtualAddress();
 	vertex_view.StrideInBytes		= sizeof(Vertex3D);
@@ -144,9 +147,6 @@ void Triangle::Draw()
 	index_view.BufferLocation		= index_buffer_->GetGPUVirtualAddress();
 	index_view.SizeInBytes			= sizeof(UInt16) * 3;
 	index_view.Format				= DXGI_FORMAT_R16_UINT;
-
-	// 定数バッファをシェーダのレジスタにセット.
-	D3D_COMMAND_LIST()->SetGraphicsRootConstantBufferView( 0, constant_buffer_->GetGPUVirtualAddress());
 
 	// インデックスを使用しないトライアングルストリップで描画.
 	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);

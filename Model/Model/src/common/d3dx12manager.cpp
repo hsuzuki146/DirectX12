@@ -25,8 +25,8 @@ bool D3DX12Manager::Create()
 	setupViewport();
 	setupScissor();
 
-	// 三角形の初期化.
-	triangle_.Initialize();
+	// モデルのロード.
+	//model_.LoadFromFile("Duck.gltf", "Duck0.bin", "data/");
 
 	return true;
 }
@@ -58,8 +58,8 @@ void D3DX12Manager::Render()
 		// レンダーターゲットの設定.
 		command_list_->OMSetRenderTargets(1, &rtv_handle_[buffer_index_], TRUE, &dsv_handle_);
 
-		// 三角形の描画.
-		triangle_.Draw();
+		// モデルの描画.
+		//model_.Draw();
 
 		// リソースの状態をレンダーターゲット用からプレゼンyと用に変更.
 		setResourceBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -424,7 +424,6 @@ bool D3DX12Manager::createPipelineStateObject()
 	D3D12_INPUT_ELEMENT_DESC InputElementDesc[] = {
 		{ "POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",		0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 12,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	0, 24,	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	// グラフィックパイプライン.

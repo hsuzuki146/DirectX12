@@ -1,7 +1,6 @@
 #include "game.h"
 #include "../common/timer.h"
 #include "../common/d3dx12manager.h"
-#include "model/model.h"
 
 Game::Game()
 {
@@ -70,9 +69,6 @@ void Game::updateInitialize(float deltaTime)
 		state_ = State::None;
 		return;
 	}
-	Model model;
-	model.LoadFromFile("Duck.gltf", "Duck0.bin", "data/" );
-
 	state_ = State::Exec;
 }
 void Game::updateExec(float deltaTime)

@@ -7,7 +7,7 @@
 #include <d3dcompiler.h>
 #include <wrl/client.h>	// ComPtr.
 
-#include "../game/primitive/triangle.h"
+#include "../game/model/model.h"
 
 #pragma comment( lib, "d3d12.lib")
 #pragma comment( lib, "dxgi.lib")
@@ -86,8 +86,8 @@ private:
 	D3D12_RECT							scissor_rect_;
 	D3D12_VIEWPORT						viewport_;
 
-	// •`‰æ‚·‚éŽOŠpŒ`.
-	Triangle							triangle_;
+	// ƒ‚ƒfƒ‹.
+	Model								model_;
 };
 
 #define D3D_MGR() (D3DX12Manager::GetInstance())
