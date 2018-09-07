@@ -71,7 +71,7 @@ void Game::updateInitialize(float deltaTime)
 		return;
 	}
 	Model model;
-	model.LoadFromFile("Duck.gltf", "data/" );
+	model.LoadFromFile("Duck.gltf", "Duck0.bin", "data/" );
 
 	state_ = State::Exec;
 }
