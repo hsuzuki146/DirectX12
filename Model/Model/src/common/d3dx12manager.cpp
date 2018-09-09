@@ -26,7 +26,8 @@ bool D3DX12Manager::Create()
 	setupScissor();
 
 	// モデルのロード.
-	//model_.LoadFromFile("Duck.gltf", "Duck0.bin", "data/");
+	model_.LoadFromFile("Duck.gltf", "data/");
+	//model_.LoadFromFile("Box.gltf", "data/");
 
 	return true;
 }
@@ -59,7 +60,7 @@ void D3DX12Manager::Render()
 		command_list_->OMSetRenderTargets(1, &rtv_handle_[buffer_index_], TRUE, &dsv_handle_);
 
 		// モデルの描画.
-		//model_.Draw();
+		model_.Draw();
 
 		// リソースの状態をレンダーターゲット用からプレゼンyと用に変更.
 		setResourceBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -483,7 +484,7 @@ bool D3DX12Manager::createPipelineStateObject()
 	pipeline_state_desc.BlendState.AlphaToCoverageEnable = FALSE;	// レンダーターゲットを設定するときに、アルファトゥカバレッジをMSテクニックとして使用するか.
 	pipeline_state_desc.BlendState.IndependentBlendEnable = FALSE;	// RenderTarget[0]のみをブレンディングする.
 
-																	// デプスステンシルステートの設定.
+	// デプスステンシルステートの設定.
 	pipeline_state_desc.DepthStencilState.DepthEnable = TRUE;	// 深度テストあり.
 	pipeline_state_desc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	pipeline_state_desc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;

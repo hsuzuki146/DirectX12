@@ -12,14 +12,14 @@ class Model
 public:
 	Model() {}
 	~Model() { }
-	bool LoadFromFile( const std::string& gltf_name, const std::string& bin_name, const std::string& root_path );
+	bool LoadFromFile( const std::string& gltf_name, const std::string& root_path );
 	void Draw();
 
 private:
 	bool loadBinary(const std::string& bin_name, const std::string& root_path);
 	bool createBuffer(const UInt8* buffer_top, Int32 accessor_no);
 	bool createIndexBuffer( const UInt8* buffer, const glTF::Accessor& accessor);
-	bool createVertexBuffer(const UInt8* buffer, const glTF::Accessor& accessor);
+	bool createVertexBuffer(const UInt8* buffer, const glTF::Accessor& accessor, Int32 accessor_no);
 	bool createBuffer();
 
 	void setConstantBuffer();

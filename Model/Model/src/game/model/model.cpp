@@ -12,7 +12,7 @@ struct Vertex3D
 	XMFLOAT3 Normal;	//法線
 };
 
-bool Model::LoadFromFile(const std::string& gltf_name, const std::string& bin_name, const std::string& root_path)
+bool Model::LoadFromFile(const std::string& gltf_name, const std::string& root_path)
 {
 	std::ifstream fin((root_path + gltf_name).c_str());
 	if (!fin)
@@ -91,7 +91,7 @@ bool Model::LoadFromFile(const std::string& gltf_name, const std::string& bin_na
 	createBuffer();
 
 	// バイナリファイル読み込み.
-	loadBinary( bin_name, root_path );
+	loadBinary(buffers_[0].filename_, root_path );
 
 	return true;
 }
@@ -135,7 +135,7 @@ bool Model::createBuffer(const UInt8* buffer_top, Int32 accessor_no)
 {
 	const glTF::Accessor& accessor = accessors_[accessor_no];
 	const glTF::BufferView buffer_view = buffer_views_[accessor.buffer_view_];
-	const UInt8* buffer = buffer_top + buffer_view.byte_offset_;
+	const UInt8* buffer = buffer_top + accessor.byte_offset_;
 	
 	// ビューの読み込み.
 	switch (buffer_view.target_)
@@ -144,7 +144,7 @@ bool Model::createBuffer(const UInt8* buffer_top, Int32 accessor_no)
 			createIndexBuffer(buffer, accessor);
 			break;
 		case glTF::ARRAY_BUFFER:			// 頂点バッファ.
-			createVertexBuffer(buffer, accessor);
+			createVertexBuffer(buffer, accessor, accessor_no);
 			break;
 		default:
 			ASSERT(false);
@@ -183,7 +183,7 @@ bool Model::createIndexBuffer(const UInt8* buffer, const glTF::Accessor& accesso
 	}
 	return true;
 }
-bool Model::createVertexBuffer(const UInt8* buffer, const glTF::Accessor& accessor)
+bool Model::createVertexBuffer(const UInt8* buffer, const glTF::Accessor& accessor, Int32 accessor_no)
 {
 	switch (accessor.component_type_)
 	{
@@ -198,7 +198,7 @@ bool Model::createVertexBuffer(const UInt8* buffer, const glTF::Accessor& access
 					ASSERT(false);
 					return false;
 				}
-				if (accessor.buffer_view_ == 1)
+				if (accessor_no == 1)
 				{
 					// 法線.
 					const DirectX::XMFLOAT3* normal_buffer = reinterpret_cast<const DirectX::XMFLOAT3*>(buffer);
@@ -207,7 +207,7 @@ bool Model::createVertexBuffer(const UInt8* buffer, const glTF::Accessor& access
 						map_buffer[i].Normal =normal_buffer[i];
 					}
 				}
-				else if (accessor.buffer_view_ == 2)
+				else if (accessor_no == 2)
 				{
 					// 座標.
 					const DirectX::XMFLOAT3* vertex_buffer = reinterpret_cast<const DirectX::XMFLOAT3*>(buffer);
@@ -254,7 +254,8 @@ bool Model::createBuffer()
 	// バッファ設定.
 	D3D12_RESOURCE_DESC resource_desc = {};
 	resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;	//用途(バッファの塊).
-	resource_desc.Width = 256;
+	//resource_desc.Width = 256;
+	resource_desc.Width = 24 * 9192 + 2 * 4096;
 	resource_desc.Height = 1;
 	resource_desc.DepthOrArraySize = 1;
 	resource_desc.MipLevels = 1;
@@ -292,12 +293,13 @@ bool Model::createBuffer()
 void Model::setConstantBuffer()
 {
 	// カメラの設定.
-	const XMMATRIX view = XMMatrixLookAtLH({ 0.0f,0.0f,-5.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+	const XMMATRIX view = XMMatrixLookAtLH({ 0,0.0f,-300.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+	//const XMMATRIX view = XMMatrixLookAtLH({ 0.0f,0.0f,-10.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
 	const XMMATRIX projection = XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(60.0f),
 		static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cx) / static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cy),
 		1.0f,
-		20.0f);
+		10000.0f);
 
 	// ビュープロジェクション行列.
 	XMFLOAT4X4 Mat;
@@ -340,7 +342,7 @@ void Model::setIndexBuffer()
 void Model::drawInstanced()
 {
 	// インデックスを使用しないトライアングルリストで描画.
-	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	// 描画.
-	D3D_COMMAND_LIST()->DrawInstanced(vertex_buffer_num_, 1, 0, 0);
+	D3D_COMMAND_LIST()->DrawInstanced(vertex_buffer_num_, 1, 0, 0, 0);
 }
