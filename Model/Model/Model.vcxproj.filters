@@ -52,6 +52,9 @@
     <ClCompile Include="src\game\model\model.cpp">
       <Filter>ソース ファイル\game\model</Filter>
     </ClCompile>
+    <ClCompile Include="src\game\model\camera.cpp">
+      <Filter>ソース ファイル\game\model</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\game\game.h">
@@ -94,6 +97,9 @@
       <Filter>ソース ファイル\game\model</Filter>
     </ClInclude>
     <ClInclude Include="src\game\model\gltf_type.h">
+      <Filter>ソース ファイル\game\model</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\model\camera.h">
       <Filter>ソース ファイル\game\model</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,9 +3,8 @@
 #include <sstream>
 #include <iostream>
 #include "../../lib/json11.hpp"
+#include "camera.h"
 
-#include "../../common/d3dx12manager.h"
-using namespace DirectX;
 struct Vertex3D
 {
 	XMFLOAT3 Position;	//位置
@@ -292,9 +291,10 @@ bool Model::createBuffer()
 
 void Model::setConstantBuffer()
 {
+#if 0
 	// カメラの設定.
 	const XMMATRIX view = XMMatrixLookAtLH({ 0,0.0f,-300.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
-	//const XMMATRIX view = XMMatrixLookAtLH({ 0.0f,0.0f,-10.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
+	//const XMMATRIX view = XMMatrixLookAtLH({ 20.0f, 30.0f,-30.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
 	const XMMATRIX projection = XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(60.0f),
 		static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cx) / static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cy),
@@ -304,6 +304,7 @@ void Model::setConstantBuffer()
 	// ビュープロジェクション行列.
 	XMFLOAT4X4 Mat;
 	XMStoreFloat4x4(&Mat, XMMatrixTranspose(view * projection));
+#endif
 
 	XMFLOAT4X4* buffer = {};
 	HRESULT hr = constant_buffer_->Map(0, nullptr, (void**)&buffer);
@@ -313,7 +314,8 @@ void Model::setConstantBuffer()
 		return;
 	}
 	// 行列を定数バッファに書き込み.
-	*buffer = Mat;
+	*buffer = CAMERA().GetMatrix();
+	//*buffer = Mat;
 	constant_buffer_->Unmap(0, nullptr);
 	buffer = nullptr;
 
@@ -344,5 +346,6 @@ void Model::drawInstanced()
 	// インデックスを使用しないトライアングルリストで描画.
 	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	// 描画.
-	D3D_COMMAND_LIST()->DrawInstanced(vertex_buffer_num_, 1, 0, 0, 0);
+	//D3D_COMMAND_LIST()->DrawInstanced(vertex_buffer_num_, 1, 0, 0);
+	D3D_COMMAND_LIST()->DrawInstanced(3, 1, 0, 0);
 }

@@ -1,6 +1,7 @@
 #include "game.h"
 #include "../common/timer.h"
 #include "../common/d3dx12manager.h"
+#include "model/camera.h"
 
 Game::Game()
 {
@@ -54,8 +55,25 @@ void Game::render()
 	{
 		return;
 	}
-	// 描画.
-	D3D_MGR().Render();
+	// 描画前.
+	{
+		D3D_MGR().Begin();
+		D3D_MGR().PreRender();
+	}
+
+	// カメラ更新.
+	CAMERA().Update();
+	// モデル描画.
+	model_.Draw();
+
+	// 描画後.
+	{
+		D3D_MGR().End();
+		D3D_MGR().ExecuteCommand();
+		D3D_MGR().WaitFrame();
+		D3D_MGR().ResetCommand();
+		D3D_MGR().Present();
+	}
 }
 
 void Game::updateNone(float deltaTime)
@@ -69,6 +87,14 @@ void Game::updateInitialize(float deltaTime)
 		state_ = State::None;
 		return;
 	}
+
+	CAMERA().Initialize();
+	CAMERA().Update();
+
+	// モデルのロード.
+	model_.LoadFromFile("Duck.gltf", "data/");
+	//model_.LoadFromFile("Box.gltf", "data/");
+
 	state_ = State::Exec;
 }
 void Game::updateExec(float deltaTime)

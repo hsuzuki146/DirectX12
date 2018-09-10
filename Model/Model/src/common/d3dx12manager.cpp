@@ -25,10 +25,6 @@ bool D3DX12Manager::Create()
 	setupViewport();
 	setupScissor();
 
-	// モデルのロード.
-	model_.LoadFromFile("Duck.gltf", "data/");
-	//model_.LoadFromFile("Box.gltf", "data/");
-
 	return true;
 }
 
@@ -36,6 +32,7 @@ void D3DX12Manager::Destroy()
 {
 }
 
+#if 0
 void D3DX12Manager::Render()
 {
 	{
@@ -60,9 +57,9 @@ void D3DX12Manager::Render()
 		command_list_->OMSetRenderTargets(1, &rtv_handle_[buffer_index_], TRUE, &dsv_handle_);
 
 		// モデルの描画.
-		model_.Draw();
+		//model_.Draw();
 
-		// リソースの状態をレンダーターゲット用からプレゼンyと用に変更.
+		// リソースの状態をレンダーターゲット用からプレゼント用に変更.
 		setResourceBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 		HRESULT hr = command_list_->Close();
@@ -111,6 +108,80 @@ void D3DX12Manager::Render()
 	// カレントのバックバッファのインデックスを取得する.
 	buffer_index_ = swap_chain_->GetCurrentBackBufferIndex();
 }
+#else
+void D3DX12Manager::Begin()
+{
+	// リソースの状態をプレゼント用からレンダーターゲット用に変更.
+	setResourceBarrier(D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	const Float32 clearColor[] = { 0.0f, 0.0f, 1.0f, 1.0f };
+	// 深度バッファとレンダーターゲットのクリア.
+	command_list_->ClearDepthStencilView(dsv_handle_, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	command_list_->ClearRenderTargetView(rtv_handle_[buffer_index_], clearColor, 0, nullptr);
+}
+void D3DX12Manager::PreRender()
+{
+	// ルートシグネチャとPSOの設定.
+	command_list_->SetGraphicsRootSignature(root_signature_.Get());
+	command_list_->SetPipelineState(pipeline_state_.Get());
+
+	// ビューポートとシザー矩形の設定.
+	command_list_->RSSetViewports(1, &viewport_);
+	command_list_->RSSetScissorRects(1, &scissor_rect_);
+
+	// レンダーターゲットの設定.
+	command_list_->OMSetRenderTargets(1, &rtv_handle_[buffer_index_], TRUE, &dsv_handle_);
+}
+void D3DX12Manager::End()
+{
+	// リソースの状態をレンダーターゲット用からプレゼント用に変更.
+	setResourceBarrier(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	HRESULT hr = command_list_->Close();
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+	}
+}
+void D3DX12Manager::ExecuteCommand()
+{
+	ID3D12CommandList* const command_lists = command_list_.Get();
+	command_queue_->ExecuteCommandLists(1, &command_lists);
+}
+void D3DX12Manager::WaitFrame()
+{
+	waitForPreviousFrame();
+}
+void D3DX12Manager::ResetCommand()
+{
+	// アロケータ.
+	HRESULT hr = command_allocator_->Reset();
+	if ((FAILED(hr)))
+	{
+		ASSERT(false);
+		return;
+	}
+
+	// コマンドリスト.
+	hr = command_list_->Reset(command_allocator_.Get(), nullptr);
+	if ((FAILED(hr)))
+	{
+		ASSERT(false);
+		return;
+	}
+}
+void D3DX12Manager::Present()
+{
+	// フロントバッファとバックバッファの切り替え.
+	HRESULT hr = swap_chain_->Present(1, 0);
+	if (FAILED(hr))
+	{
+		ASSERT(false);
+		return;
+	}
+	// カレントのバックバッファのインデックスを取得する.
+	buffer_index_ = swap_chain_->GetCurrentBackBufferIndex();
+}
+#endif
 
 bool D3DX12Manager::createFactory()
 {

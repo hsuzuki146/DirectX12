@@ -1,5 +1,7 @@
 #pragma once
 
+#include "model/model.h"
+
 class Game
 {
 public:
@@ -27,4 +29,6 @@ private:
 	void updateRelease(float deltaTime);
 private:
 	State state_ = { State::Initialize };
+
+	Model model_;
 };

@@ -17,6 +17,8 @@
 #include "singleton.h"
 #include "setup_param.h"
 #include "window.h"
+#include "d3dx12manager.h"
+using namespace DirectX;
 
 #define NEW(p) new p;
 #define NEW_ARRAY(p, size) new p[size];

@@ -7,7 +7,7 @@
 #include <d3dcompiler.h>
 #include <wrl/client.h>	// ComPtr.
 
-#include "../game/model/model.h"
+//#include "../game/model/model.h"
 
 #pragma comment( lib, "d3d12.lib")
 #pragma comment( lib, "dxgi.lib")
@@ -22,9 +22,19 @@ public:
 	~D3DX12Manager();
 	bool Create();
 	void Destroy();
-	void Render();
+	//void Render();
+
 	ComPtr<ID3D12Device> GetDevice() { return device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return command_list_; }
+
+public:
+	void Begin();
+	void PreRender();
+	void End();
+	void ExecuteCommand();
+	void WaitFrame();
+	void ResetCommand();
+	void Present();
 
 private:
 	bool createFactory();
@@ -87,7 +97,7 @@ private:
 	D3D12_VIEWPORT						viewport_;
 
 	// ƒ‚ƒfƒ‹.
-	Model								model_;
+	//Model								model_;
 };
 
 #define D3D_MGR() (D3DX12Manager::GetInstance())
