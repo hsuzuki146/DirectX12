@@ -25,7 +25,9 @@ namespace glTF
 		Int32		byte_offset_;
 		glTF::Type	component_type_;
 		Int32		count_;
-		std::string type_;			
+		std::string type_;	
+		std::vector<Float64>	min_;
+		std::vector<Float64>	max_;
 	};
 	struct Mesh
 	{

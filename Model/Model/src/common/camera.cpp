@@ -35,7 +35,7 @@ void Camera::Update()
 		static Float32 rotZ = 0.0f; 
 		m = XMMatrixScaling(1.0f, 1.0f, 1.0f) * XMMatrixRotationX(rotX) * XMMatrixRotationY(rotY) * XMMatrixRotationZ(rotZ);
 		view_ = m * view_;
-		rotX += 0.01f; 
+		//rotX += 0.01f; 
 		rotY += 0.01f;
 		rotZ += 0.00f;
 	}

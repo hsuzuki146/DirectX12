@@ -19,3 +19,5 @@ struct Matrix4x4
 {
 	Float32 m_[4][4];
 };
+
+#define CLAMP(v,min,max) ( v < min ? min : v > max ? max : v)

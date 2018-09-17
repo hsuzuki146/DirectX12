@@ -84,6 +84,17 @@ bool Model::loadglTF(const std::string& gltf_name, const std::string& root_path)
 		accessor.component_type_ = static_cast<glTF::Type>(item["componentType"].int_value());
 		accessor.count_ = item["count"].int_value();
 		accessor.type_ = item["type"].string_value();
+		
+		// 最小値と最大値.
+		for(auto& value : item["min"].array_items())
+		{
+			accessor.min_.push_back(value.number_value());
+		}
+		for (auto& value : item["max"].array_items())
+		{
+			accessor.max_.push_back(value.number_value());
+		}
+
 		accessors_.push_back(accessor);
 	}
 
@@ -182,8 +193,7 @@ bool Model::setupIndexBuffer(const UInt8* buffer, const glTF::Accessor& accessor
 			const UInt16* index_buffer = reinterpret_cast<const UInt16*>(buffer);
 			for (Int32 i = 0; i < accessor.count_; ++i)
 			{
-				map_buffer[i] = index_buffer[i];
-				ASSERT(map_buffer[i] <= 2398);
+				map_buffer[i] = CLAMP(index_buffer[i], static_cast<const UInt16>(accessor.min_[0]), static_cast<const UInt16>(accessor.max_[0]));
 			}
 
 			index_buffer_->Unmap(0, nullptr);
@@ -218,7 +228,10 @@ bool Model::setupVertexBuffer(const UInt8* buffer, const glTF::Accessor& accesso
 					const DirectX::XMFLOAT3* normal_buffer = reinterpret_cast<const DirectX::XMFLOAT3*>(buffer);
 					for (Int32 i = 0; i < accessor.count_; ++i)
 					{
-						map_buffer[i].Normal =normal_buffer[i];
+						//map_buffer[i].Normal =normal_buffer[i];
+						map_buffer[i].Normal.x = CLAMP(normal_buffer[i].x, static_cast<Float32>(accessors_[accessor_no].min_[0]), static_cast<Float32>(accessors_[accessor_no].max_[0]));
+						map_buffer[i].Normal.y = CLAMP(normal_buffer[i].y, static_cast<Float32>(accessors_[accessor_no].min_[1]), static_cast<Float32>(accessors_[accessor_no].max_[1]));
+						map_buffer[i].Normal.z = CLAMP(normal_buffer[i].z, static_cast<Float32>(accessors_[accessor_no].min_[2]), static_cast<Float32>(accessors_[accessor_no].max_[2]));
 					}
 				}
 				else if (accessor_no == 2)
@@ -227,7 +240,10 @@ bool Model::setupVertexBuffer(const UInt8* buffer, const glTF::Accessor& accesso
 					const DirectX::XMFLOAT3* vertex_buffer = reinterpret_cast<const DirectX::XMFLOAT3*>(buffer);
 					for (Int32 i = 0; i < accessor.count_; ++i)
 					{
-						map_buffer[i].Position = vertex_buffer[i];
+						//map_buffer[i].Position = vertex_buffer[i];
+						map_buffer[i].Position.x = CLAMP(vertex_buffer[i].x, static_cast<Float32>(accessors_[accessor_no].min_[0]), static_cast<Float32>(accessors_[accessor_no].max_[0]));
+						map_buffer[i].Position.y = CLAMP(vertex_buffer[i].y, static_cast<Float32>(accessors_[accessor_no].min_[1]), static_cast<Float32>(accessors_[accessor_no].max_[1]));
+						map_buffer[i].Position.z = CLAMP(vertex_buffer[i].z, static_cast<Float32>(accessors_[accessor_no].min_[2]), static_cast<Float32>(accessors_[accessor_no].max_[2]));
 					}
 					vertex_buffer_num_ = accessor.count_;
 				}
@@ -451,8 +467,8 @@ void Model::setIndexBuffer()
 void Model::drawInstanced()
 {
 	// インデックスを使用しないトライアングルリストで描画.
-	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-	//D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 描画.
 	//D3D_COMMAND_LIST()->DrawInstanced(vertex_buffer_num_, 1, 0, 0);
