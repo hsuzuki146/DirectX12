@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include "../../lib/json11.hpp"
-#include "camera.h"
+#include "../../common/camera.h"
 
 struct Vertex3D
 {
@@ -11,7 +11,34 @@ struct Vertex3D
 	XMFLOAT3 Normal;	//法線
 };
 
+Model::~Model()
+{
+}
+
 bool Model::LoadFromFile(const std::string& gltf_name, const std::string& root_path)
+{
+	loadglTF( gltf_name, root_path );
+
+	// バッファの生成.
+	createBuffer();
+
+	// モデルファイル読み込み.
+	loadModel(buffers_[0].filename_, root_path );
+
+	setupIndexBufferView();
+	setupVertexBufferView();
+
+	return true;
+}
+void Model::Draw()
+{
+	setVertexBuffer();
+	setIndexBuffer();
+	setConstantBuffer();
+	drawInstanced();
+}
+
+bool Model::loadglTF(const std::string& gltf_name, const std::string& root_path)
 {
 	std::ifstream fin((root_path + gltf_name).c_str());
 	if (!fin)
@@ -36,15 +63,15 @@ bool Model::LoadFromFile(const std::string& gltf_name, const std::string& root_p
 		buffer.filename_ = item["uri"].string_value();
 		buffers_.push_back(buffer);
 	}
-	
+
 	// バッファビュー情報.
 	for (auto& item : json["bufferViews"].array_items())
 	{
 		glTF::BufferView buffer_view;
-		buffer_view.buffer_			= item["buffer"].string_value();
-		buffer_view.byte_length_	= item["byteLength"].int_value();
-		buffer_view.byte_offset_	= item["byteOffset"].int_value();
-		buffer_view.target_			= static_cast<glTF::Type>(item["target"].int_value());
+		buffer_view.buffer_ = item["buffer"].string_value();
+		buffer_view.byte_length_ = item["byteLength"].int_value();
+		buffer_view.byte_offset_ = item["byteOffset"].int_value();
+		buffer_view.target_ = static_cast<glTF::Type>(item["target"].int_value());
 		buffer_views_.push_back(buffer_view);
 	}
 
@@ -52,11 +79,11 @@ bool Model::LoadFromFile(const std::string& gltf_name, const std::string& root_p
 	for (auto& item : json["accessors"].array_items())
 	{
 		glTF::Accessor accessor;
-		accessor.buffer_view_		= item["bufferView"].int_value();
-		accessor.byte_offset_		= item["byteOffset"].int_value();
-		accessor.component_type_	= static_cast<glTF::Type>(item["componentType"].int_value());
-		accessor.count_				= item["count"].int_value();
-		accessor.type_				= item["type"].string_value();
+		accessor.buffer_view_ = item["bufferView"].int_value();
+		accessor.byte_offset_ = item["byteOffset"].int_value();
+		accessor.component_type_ = static_cast<glTF::Type>(item["componentType"].int_value());
+		accessor.count_ = item["count"].int_value();
+		accessor.type_ = item["type"].string_value();
 		accessors_.push_back(accessor);
 	}
 
@@ -64,21 +91,21 @@ bool Model::LoadFromFile(const std::string& gltf_name, const std::string& root_p
 	for (auto& item : json["meshes"].array_items())
 	{
 		glTF::Mesh mesh;
-			
+
 		// 矩形.
 		for (auto& primitive : item["primitives"].array_items())
 		{
 			glTF::Mesh::Primitive prim;
-					
+
 			// 属性.
-			for (auto& object: primitive["attributes"].object_items()) 
+			for (auto& object : primitive["attributes"].object_items())
 			{
-				prim.attributes_.insert( std::pair<const std::string, Int32>(object.first, object.second.int_value() ) );
+				prim.attributes_.insert(std::pair<const std::string, Int32>(object.first, object.second.int_value()));
 			}
 
-			prim.indices_	= primitive["indices"].int_value();
-			prim.mode_		= static_cast<glTF::Type>(primitive["mode"].int_value());
-			prim.material_	= primitive["material"].int_value();
+			prim.indices_ = primitive["indices"].int_value();
+			prim.mode_ = static_cast<glTF::Type>(primitive["mode"].int_value());
+			prim.material_ = primitive["material"].int_value();
 			mesh.primitives_.push_back(prim);
 		}
 		// メッシュ名.
@@ -86,23 +113,10 @@ bool Model::LoadFromFile(const std::string& gltf_name, const std::string& root_p
 		meshs_.push_back(mesh);
 	}
 
-	// バッファの生成.
-	createBuffer();
-
-	// バイナリファイル読み込み.
-	loadBinary(buffers_[0].filename_, root_path );
-
 	return true;
 }
-void Model::Draw()
-{
-	setConstantBuffer();
-	setVertexBuffer();
-	setIndexBuffer();
-	drawInstanced();
-}
 
-bool Model::loadBinary(const std::string& bin_name, const std::string& root_path)
+bool Model::loadModel(const std::string& bin_name, const std::string& root_path)
 {
 	// バイナリファイルの読み込み.
 	std::ifstream fin( (root_path + bin_name), std::ios::in | std::ios::binary );
@@ -117,10 +131,10 @@ bool Model::loadBinary(const std::string& bin_name, const std::string& root_path
 	// 読み込み.
 	fin.read((char*)file_buffer, buffers_[0].filesize_);
 
-	// バッファ生成.
+	// バッファのセットアップ処理.
 	for (int i = 0; i < accessors_.size(); ++i)
 	{
-		createBuffer(file_buffer, i);
+		setupBuffer(file_buffer, i);
 	}
 
 	SAFE_DELETE_ARRAY(file_buffer);
@@ -130,20 +144,20 @@ bool Model::loadBinary(const std::string& bin_name, const std::string& root_path
 	return true;
 }
 
-bool Model::createBuffer(const UInt8* buffer_top, Int32 accessor_no)
+bool Model::setupBuffer(const UInt8* buffer_top, Int32 accessor_no)
 {
 	const glTF::Accessor& accessor = accessors_[accessor_no];
 	const glTF::BufferView buffer_view = buffer_views_[accessor.buffer_view_];
-	const UInt8* buffer = buffer_top + accessor.byte_offset_;
+	const UInt8* buffer = buffer_top + buffer_view.byte_offset_ + accessor.byte_offset_;
 	
 	// ビューの読み込み.
 	switch (buffer_view.target_)
 	{
 		case glTF::ELEMENT_ARRAY_BUFFER:	// インデックスバッファ.
-			createIndexBuffer(buffer, accessor);
+			setupIndexBuffer(buffer, accessor);
 			break;
 		case glTF::ARRAY_BUFFER:			// 頂点バッファ.
-			createVertexBuffer(buffer, accessor, accessor_no);
+			setupVertexBuffer(buffer, accessor, accessor_no);
 			break;
 		default:
 			ASSERT(false);
@@ -152,7 +166,7 @@ bool Model::createBuffer(const UInt8* buffer_top, Int32 accessor_no)
 	return true;
 }
 
-bool Model::createIndexBuffer(const UInt8* buffer, const glTF::Accessor& accessor)
+bool Model::setupIndexBuffer(const UInt8* buffer, const glTF::Accessor& accessor)
 {
 	switch (accessor.component_type_)
 	{
@@ -169,6 +183,7 @@ bool Model::createIndexBuffer(const UInt8* buffer, const glTF::Accessor& accesso
 			for (Int32 i = 0; i < accessor.count_; ++i)
 			{
 				map_buffer[i] = index_buffer[i];
+				ASSERT(map_buffer[i] <= 2398);
 			}
 
 			index_buffer_->Unmap(0, nullptr);
@@ -182,7 +197,7 @@ bool Model::createIndexBuffer(const UInt8* buffer, const glTF::Accessor& accesso
 	}
 	return true;
 }
-bool Model::createVertexBuffer(const UInt8* buffer, const glTF::Accessor& accessor, Int32 accessor_no)
+bool Model::setupVertexBuffer(const UInt8* buffer, const glTF::Accessor& accessor, Int32 accessor_no)
 {
 	switch (accessor.component_type_)
 	{
@@ -242,6 +257,20 @@ bool Model::createVertexBuffer(const UInt8* buffer, const glTF::Accessor& access
 
 bool Model::createBuffer()
 {
+	// 頂点バッファの作成.
+	createVertexBuffer();
+
+	// インデックスバッファの作成.
+	createIndexBuffer();
+
+	// 定数バッファの作成.
+	createConstantBuffer();
+
+	return true;
+}
+
+bool Model::createVertexBuffer()
+{
 	// 物理メモリ設定.
 	D3D12_HEAP_PROPERTIES heap_properties = {};
 	heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;		// GPUへの転送に最適化.
@@ -253,8 +282,7 @@ bool Model::createBuffer()
 	// バッファ設定.
 	D3D12_RESOURCE_DESC resource_desc = {};
 	resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;	//用途(バッファの塊).
-	//resource_desc.Width = 256;
-	resource_desc.Width = 24 * 9192 + 2 * 4096;
+	resource_desc.Width = getVertexBufferSize();
 	resource_desc.Height = 1;
 	resource_desc.DepthOrArraySize = 1;
 	resource_desc.MipLevels = 1;
@@ -271,16 +299,65 @@ bool Model::createBuffer()
 		return false;
 	}
 
+	return true;
+}
+
+bool Model::createIndexBuffer()
+{
+	// 物理メモリ設定.
+	D3D12_HEAP_PROPERTIES heap_properties = {};
+	heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;		// GPUへの転送に最適化.
+	heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;	// CPU側で読み書き.
+	heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;	// メモリの取り方はお任せ.
+	heap_properties.CreationNodeMask = 0;
+	heap_properties.VisibleNodeMask = 0;
+
+	// バッファ設定.
+	D3D12_RESOURCE_DESC resource_desc = {};
+	resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;	//用途(バッファの塊).
+	resource_desc.Width = getIndexBufferSize();
+	resource_desc.Height = 1;
+	resource_desc.DepthOrArraySize = 1;
+	resource_desc.MipLevels = 1;
+	resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+	resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resource_desc.SampleDesc.Count = 1;
+	resource_desc.SampleDesc.Quality = 0;
+
 	// インデックスバッファの作成.
-	hr = D3D_DEVICE()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&index_buffer_));
+	HRESULT hr = D3D_DEVICE()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&index_buffer_));
 	if (FAILED(hr))
 	{
 		ASSERT(false);
 		return false;
 	}
 
+	return true;
+}
+bool Model::createConstantBuffer()
+{
+	// 物理メモリ設定.
+	D3D12_HEAP_PROPERTIES heap_properties = {};
+	heap_properties.Type = D3D12_HEAP_TYPE_UPLOAD;		// GPUへの転送に最適化.
+	heap_properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;	// CPU側で読み書き.
+	heap_properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;	// メモリの取り方はお任せ.
+	heap_properties.CreationNodeMask = 0;
+	heap_properties.VisibleNodeMask = 0;
+
+	// バッファ設定.
+	D3D12_RESOURCE_DESC resource_desc = {};
+	resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;	//用途(バッファの塊).
+	resource_desc.Width = getConstantBufferSize();
+	resource_desc.Height = 1;
+	resource_desc.DepthOrArraySize = 1;
+	resource_desc.MipLevels = 1;
+	resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+	resource_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resource_desc.SampleDesc.Count = 1;
+	resource_desc.SampleDesc.Quality = 0;
+
 	// 定数バッファの作成.
-	hr = D3D_DEVICE()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&constant_buffer_));
+	HRESULT hr = D3D_DEVICE()->CreateCommittedResource(&heap_properties, D3D12_HEAP_FLAG_NONE, &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&constant_buffer_));
 	if (FAILED(hr))
 	{
 		ASSERT(false);
@@ -289,23 +366,62 @@ bool Model::createBuffer()
 	return true;
 }
 
+void Model::setupIndexBufferView()
+{
+	index_view_.BufferLocation = index_buffer_->GetGPUVirtualAddress();
+	index_view_.SizeInBytes = sizeof(UInt16) * index_buffer_num_;
+	index_view_.Format = DXGI_FORMAT_R16_UINT;
+}
+void Model::setupVertexBufferView()
+{
+	vertex_view_.BufferLocation = vertex_buffer_->GetGPUVirtualAddress();
+	vertex_view_.StrideInBytes = sizeof(Vertex3D);
+	vertex_view_.SizeInBytes = sizeof(Vertex3D) * vertex_buffer_num_;
+}
+
+UInt64 Model::getIndexBufferSize() const
+{
+	for (int i = 0; i < accessors_.size(); ++i)
+	{
+		const glTF::Accessor& accessor = accessors_[i];
+		const glTF::BufferView buffer_view = buffer_views_[accessor.buffer_view_];
+		// ビューの読み込み.
+		switch (buffer_view.target_)
+		{
+		case glTF::ELEMENT_ARRAY_BUFFER:	// インデックスバッファ.
+			return INDEX_BUFFER_SIZE(accessor.count_);
+		default:
+			break;
+		}
+	}
+
+	return 0;
+}
+UInt64 Model::getVertexBufferSize() const
+{
+	for (int i = 0; i < accessors_.size(); ++i)
+	{
+		const glTF::Accessor& accessor = accessors_[i];
+		const glTF::BufferView buffer_view = buffer_views_[accessor.buffer_view_];
+		// ビューの読み込み.
+		switch (buffer_view.target_)
+		{
+		case glTF::ARRAY_BUFFER:			// 頂点バッファ.
+			return VERTEX_BUFFER_SIZE(Vertex3D, accessor.count_);
+		default:
+			break;
+		}
+	}
+	return true;
+}
+
+UInt64 Model::getConstantBufferSize() const
+{
+	return CONSTANT_BUFFER_SIZE(XMFLOAT4X4);
+}
+
 void Model::setConstantBuffer()
 {
-#if 0
-	// カメラの設定.
-	const XMMATRIX view = XMMatrixLookAtLH({ 0,0.0f,-300.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
-	//const XMMATRIX view = XMMatrixLookAtLH({ 20.0f, 30.0f,-30.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,1.0f,0.0f });
-	const XMMATRIX projection = XMMatrixPerspectiveFovLH(
-		XMConvertToRadians(60.0f),
-		static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cx) / static_cast<float>(SetupParam::GetInstance().GetParam().windowSize_.cy),
-		1.0f,
-		10000.0f);
-
-	// ビュープロジェクション行列.
-	XMFLOAT4X4 Mat;
-	XMStoreFloat4x4(&Mat, XMMatrixTranspose(view * projection));
-#endif
-
 	XMFLOAT4X4* buffer = {};
 	HRESULT hr = constant_buffer_->Map(0, nullptr, (void**)&buffer);
 	if (FAILED(hr))
@@ -315,7 +431,6 @@ void Model::setConstantBuffer()
 	}
 	// 行列を定数バッファに書き込み.
 	*buffer = CAMERA().GetMatrix();
-	//*buffer = Mat;
 	constant_buffer_->Unmap(0, nullptr);
 	buffer = nullptr;
 
@@ -325,27 +440,23 @@ void Model::setConstantBuffer()
 
 void Model::setVertexBuffer()
 {
-	D3D12_VERTEX_BUFFER_VIEW vertex_view = {};
-	vertex_view.BufferLocation = vertex_buffer_->GetGPUVirtualAddress();
-	vertex_view.StrideInBytes = sizeof(Vertex3D);
-	vertex_view.SizeInBytes = sizeof(Vertex3D) * vertex_buffer_num_;
-	D3D_COMMAND_LIST()->IASetVertexBuffers(0, 1, &vertex_view);
+	D3D_COMMAND_LIST()->IASetVertexBuffers(0, 1, &vertex_view_);
 }
 
 void Model::setIndexBuffer()
 {
-	D3D12_INDEX_BUFFER_VIEW index_view = {};
-	index_view.BufferLocation = index_buffer_->GetGPUVirtualAddress();
-	index_view.SizeInBytes = sizeof(UInt16) * index_buffer_num_;
-	index_view.Format = DXGI_FORMAT_R16_UINT; 
-	D3D_COMMAND_LIST()->IASetIndexBuffer(&index_view);
+	D3D_COMMAND_LIST()->IASetIndexBuffer(&index_view_);
 }
 
 void Model::drawInstanced()
 {
 	// インデックスを使用しないトライアングルリストで描画.
 	D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	//D3D_COMMAND_LIST()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// 描画.
 	//D3D_COMMAND_LIST()->DrawInstanced(vertex_buffer_num_, 1, 0, 0);
-	D3D_COMMAND_LIST()->DrawInstanced(3, 1, 0, 0);
+	//D3D_COMMAND_LIST()->DrawInstanced(3, 1, 0, 0);
+	D3D_COMMAND_LIST()->DrawIndexedInstanced(index_buffer_num_, 1, 0, 0, 0);
+	//D3D_COMMAND_LIST()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }

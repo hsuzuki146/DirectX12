@@ -39,5 +39,9 @@ namespace glTF
 		std::vector<Primitive>	primitives_;
 		std::string				name_;
 	};
-		
+	
+#define VERTEX_BUFFER_SIZE( type, count ) (sizeof(type) * count)
+#define INDEX_BUFFER_SIZE( count ) (sizeof(UInt16) * count)
+#define CONSTANT_BUFFER_SIZE( type ) (sizeof(type))
+
 }

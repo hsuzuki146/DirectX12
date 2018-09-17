@@ -1,7 +1,7 @@
 #include "game.h"
 #include "../common/timer.h"
 #include "../common/d3dx12manager.h"
-#include "model/camera.h"
+#include "../common/camera.h"
 
 Game::Game()
 {

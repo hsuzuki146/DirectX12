@@ -14,6 +14,7 @@
 #endif	// #if defined (_DEBUG)
 
 #include "types.h"
+#include "math.h"
 #include "singleton.h"
 #include "setup_param.h"
 #include "window.h"
@@ -24,3 +25,5 @@ using namespace DirectX;
 #define NEW_ARRAY(p, size) new p[size];
 #define SAFE_DELETE(p) if(p) { delete p; }
 #define SAFE_DELETE_ARRAY(p) if(p) { delete[] p; }
+#define SAFE_RELEASE(p) if(p) { p->Release(); }
+#define SAFE_RELEASE_ARRAY(p) if(p) { const UInt32 size = ARRAYSIZE(p); for( UInt32 i = 0; i < size; ++i ) { p[i]->Release(); } }

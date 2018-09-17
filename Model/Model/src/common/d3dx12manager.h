@@ -22,7 +22,6 @@ public:
 	~D3DX12Manager();
 	bool Create();
 	void Destroy();
-	//void Render();
 
 	ComPtr<ID3D12Device> GetDevice() { return device_; }
 	ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return command_list_; }
